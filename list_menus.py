@@ -42,6 +42,7 @@ def processFolder(dirName, subDirList, fileList, dirLevel):
         items = parseIndexFile(indexFile)
         for item in items:  # returns a list of sets (menuItem, menuDescriptions)
             if item[0] in subdirList:
+                pass
                 # for dN, sdList, fL in os.walk(dirName + '\\' + item[0]):   <------------------ make this non-recursive.
                 #     processFolder(dN, sdList, fL,  dirLevel + 1)
             else:
