@@ -1,0 +1,63 @@
+# Psuedocode for building DOORS menus
+
+# Function definitions
+def test_menu_folder(folder_name, file_list):
+	Does folder contain .idx and .hlp files of same name?
+		Yes:
+			Return True
+		No:
+			Return False
+
+def read_index_file(file_name):
+	Create empty set of menu_items (item, description) #types = { separator | menu_item }
+	For each line of file_name:
+		Does line contain separator string ("----")?
+			Yes:
+				Add a separator item to menu_items
+			No:
+				Continue
+		Does line contain text data # Assume any line that is not a separator or white space is menu
+			Yes:
+				Parse line for menu item and its description
+				Add menu_item and description to menu_items
+			No:
+				Continue
+		Ignore any other line # should only be white space
+	Return(menu_list)
+
+def menu_maker(folder_name, menu_stuff, menu_level):
+	Open folder called folder_name and get list of files and subdirs
+	Is test_menu_folder(folder_name, file_list) True? # Is this folder part of the menu
+		Yes:
+			Make a list of all of the DXL files in the folder
+			Make a list of all the subfolders in the folder
+
+			For each item in read_index_file(.idx file name):
+				Is the menu item a separator?
+					Yes:
+						Add separator to menu_stuff
+					No:
+						Continue
+				Is the menu item the name of a subfolder?
+					Yes:
+						Add folder name to menu_stuff
+						Call menu_stuff = menu_maker(subfolder, menu_stuff, menu_level + 1)
+					No:
+						Continue
+				Is the dxl file name in the list of DXL files?
+					Yes:
+						Add dxl file name to menu_stuff
+						Remove the file name from the list of DXL files
+					No:
+						Continue
+			Add all remaining names of DXL files to menu_stuff
+	Return(menu_stuff)
+
+# Main program
+main()
+	Create an empty menu #
+	Set menu level to zero
+	For folder in a list of folders:
+		menu_maker(folder, menu, menu_level)
+	For each item in menu:
+		print item
