@@ -6,16 +6,6 @@ import os
 #   -a \\az18nt6012\AERO\addins;\\az18nt6012\PhoenixAddins\Honeywell
 #   -J \\az18nt6012\AERO\addins_project;\\az18nt6012\PhoenixAddins\Projects
 
-# Use SQL table to hold menu_items
-#    id, parent_id, name, type, display
-
-# parseIndexFile: reads an input file and returns a list of sets menu item and description
-
-# 1) Find the underscore searching from the right
-# 2) String to the right is the MenuDescription
-# 3) Backup to a single character
-# 4) String to the left is the MenuItem
-
 
 def parseIndexFile(indexFile):
     lines = []
@@ -24,54 +14,59 @@ def parseIndexFile(indexFile):
         line = line.strip()
         if len(line) > 0:
             if line.find('-----') != -1:
-                pass
+                lines.append(('', '---------------'))
             else:
                 line = ' '.join(line.split('\t')) # replace tabs with spaces
-                line = line.rsplit('_', 1) # split on rightmost underscore, may be one or two
-                print("<<" + line[0] + ">>")
-                menuDescription = line[1].strip() # grab text for description from right side of underscore
-                menuItem = line[0].strip().split()[0] # grab text for item from first part of left side of underscore
+                parts = line.rsplit('_', 1) # split on rightmost underscore, may be one or two
+                menuDescription = parts[1].strip() # grab text for description from right side of underscore
+                parts = parts[0].strip().rsplit(' ') # Get hotkey in last element of parts
+                menuItem = ' '.join(parts[:-1]).strip() # grab text for item from first part of left side of underscore
                 lines.append((menuItem, menuDescription))
     return(lines)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # Set the directory you want to start from
-# rootDir = '\\\\az18nt6012\\PhoenixAddins\Honeywell'
-# rootLevel = len(rootDir.rsplit('\\'))
-# for dirName, subdirList, fileList in os.walk(rootDir):
-#     dirLevel = len(dirName.rsplit('\\')) - rootLevel
-#     baseFileName = dirName.rsplit('\\')[-1]
-#     indexFile = dirName + '\\' + baseFileName + '.idx'
-#     helpFile  = dirName + '\\' + baseFileName + '.hlp'
-#     if os.path.isfile(indexFile) and os.path.isfile(helpFile) and dirLevel > 0:
-#         print(dirLevel, '\t' * dirLevel, f'{baseFileName}')
-
-# Set the directory you want to start from
-rootDir = '\\\\az18nt6012\\PhoenixAddins\Projects'
-rootLevel = len(rootDir.rsplit('\\'))
-for dirName, subdirList, fileList in os.walk(rootDir):
-    dirLevel = len(dirName.rsplit('\\')) - rootLevel
+def processFolder(dirName, subDirList, fileList, dirLevel):
     baseFileName = dirName.rsplit('\\')[-1]
     indexFile = dirName + '\\' + baseFileName + '.idx'
-    helpFile  = dirName + '\\' + baseFileName + '.hlp'
-    if os.path.isfile(indexFile) and os.path.isfile(helpFile) and dirLevel > 0:
-        for item in parseIndexFile(indexFile):
-            pass
-            # print(item[0], ': ', item[1])
-    print("==============")
+    helpFile = dirName + '\\' + baseFileName + '.hlp'
+    hasIndexFile = os.path.isfile(indexFile)
+    hasHelpFile = os.path.isfile(helpFile)
+
+    dxl_list = []  # Create initial list of dxls
+    for fileName in fileList:
+        if fileName.endswith('.dxl'):
+            dxl_list.append(fileName)
+
+    if hasIndexFile and hasHelpFile:
+        print('\t' * dirLevel + baseFileName)
+        items = parseIndexFile(indexFile)
+        for item in items:  # returns a list of sets (menuItem, menuDescriptions)
+            if item[0] in subdirList:
+                # for dN, sdList, fL in os.walk(dirName + '\\' + item[0]):   <------------------ make this non-recursive.
+                #     processFolder(dN, sdList, fL,  dirLevel + 1)
+            else:
+                print('\t' * (dirLevel + 1) + item[1])
+            if item[1] in dxl_list:
+                dxl_list.remove(item[1])
+        for fileName in dxl_list:
+            print('\t' * (dirLevel + 1) + fileName)
+    return
+
+
+
+# Starting with the current directory:
+#   If there is a help and index file with the same name as the directory name,
+#     Read the index file
+#     For each valid line in the index file (contains format of a menu item)
+#       If there is a dxl file in the current folder, or if there is a subfolder of the current
+#         folder that matches the menuItem portion of the line, add to list of menu items to return.
+
+# Set the directory you want to start from
+#rootDirList = ['\\\\az18nt6012\\AERO\\addins_project','\\\\az18nt6012\\PhoenixAddins\Projects']
+rootDirList = ['\\\\az18nt6012\\AERO\\addins_project']
+
+for rootDir in rootDirList:
+    for dirName, subdirList, fileList in os.walk(rootDir):
+        processFolder(dirName, subdirList, fileList, 0)
+
 
