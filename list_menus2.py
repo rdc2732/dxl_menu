@@ -19,7 +19,6 @@ def test_menu_folder(folder_path):
 
 
 def read_index_file(indexFile):
-    print('index_file: ' + indexFile)
     menu_items = [] # will contain sets (menu_item, menu_description)
     f = open(indexFile)
     for line in f:
@@ -33,22 +32,20 @@ def read_index_file(indexFile):
                 line = ' '.join(line.split()) # remove multiple spaces with one space
                 parts = line.rsplit(' ')  # split on the single spaces
                 if '_' in parts: # Normally there will be one or two.  We need to find it if one, the second if two
-                    part_index = 0
                     counter = 0
                     for part in parts:
-                        counter += 1
                         if part == '_':
                             part_index = counter
+                        counter += 1
                     if part_index not in [1,2]:
-                        menuItem = 'Error'
-                        menuDescription = 'Error'
+                        menuItem = 'Error1'
+                        menuDescription = 'Error1'
                     else:
-                        menuItem = ' '.join(parts[:part_index])  # grab text from left side of underscore
-                        menuDescription = ' '.join(parts[part_index:])  # grab text from right side of underscore
+                        menuItem = parts[0]  # grab first field of text
+                        menuDescription = ' '.join(parts[part_index+1:])  # grab last field of text
                 else:
-                    menuItem = 'Error'
-                    menuDescription = 'Error'
-            print('\t', menuItem, menuDescription)
+                    menuItem = 'Error2'
+                    menuDescription = 'Error2'
             menu_items.append((menuItem, menuDescription))
 
     return(menu_items)
@@ -62,6 +59,9 @@ def menu_maker(folder_name, menu_data, menu_level):
 
     for dirName, subdirList, fileList in os.walk(folder_name): # use os.walk to get directory info
         break
+    this_folder = dirName.rsplit('\\')[-1]
+    menu_data.append((menu_level, this_folder))
+    menu_level += 1
 
     for fname in fileList:  # Build list of dxl files in current directory
         if fname.endswith('.dxl'):
@@ -73,17 +73,16 @@ def menu_maker(folder_name, menu_data, menu_level):
         elif item[0] in subdirList:
             subdirPath = dirName + '\\' + item[0]
             menu_info = (menu_level, item[0])
-            menu_data.append(menu_info)
-            menu_maker(subdirPath, menu_data, menu_level + 1) # Recurse this function for next level menu
+            menu_maker(subdirPath, menu_data, menu_level) # Recurse this function for next level menu
             subdirList.remove(item[0])
-        elif item[0] in dxl_list:
+        elif item[0] + '.dxl' in dxl_list:
             menu_info = (menu_level, item[1])
             menu_data.append(menu_info)
             dxl_list.remove(item[0] + '.dxl')
 
     for subdirName in subdirList: # Add any other dxl files in folder to menu
         subdirPath = folder_name + '\\' + subdirName
-        menu_maker(subdirPath, menu_data, menu_level + 1)  # Recurse this function for next level menu
+        menu_maker(subdirPath, menu_data, menu_level)  # Recurse this function for next level menu
 
     for dxl_file in dxl_list: # Add any other dxl files in folder to menu
         menu_info = (menu_level, dxl_file)
@@ -93,13 +92,14 @@ def menu_maker(folder_name, menu_data, menu_level):
 
 
 # Main program
-# rootDirList = ['\\\\az18nt6012\\AERO\\addins_project','\\\\az18nt6012\\PhoenixAddins\Projects']
-rootDirList = ['\\\\az18nt6012\\AERO\\addins_project']
+rootDirList = ['\\\\az18nt6012\\AERO\\addins_project','\\\\az18nt6012\\PhoenixAddins\Projects',\
+               '\\\\az18nt6012\\AERO\\addins','\\\\az18nt6012\\PhoenixAddins\Honeywell']
+#rootDirList = ['\\\\az18nt6012\\AERO\\addins_project']
 menu = []
-menu_level = 0
 
 for rootDir in rootDirList:
+    menu_level = 0
     menu_maker(rootDir, menu, menu_level)
-    for tabs, description in menu:
-        continue
-        print('\t'*tabs + description)
+
+for tabs, description in menu:
+    print('\t'*tabs + description)
